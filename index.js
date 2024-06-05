@@ -23,48 +23,86 @@ CRUD: Criar, Ler (Individual & Tudo), Atualizar e Remover
 */
 
 const mensagens = [
-    "Essa é a primeira mensagem",
-    "Essa é a segunda mensagem"
+    {
+        "id": 1,
+        "texto": "Essa é a primeira mensagem",
+    },
+    {
+        "id": 2,
+        "texto": "Essa é a segunda mensagem",
+    }
 ];
+
+const getMensagensValidas = () => mensagens.filter(Boolean);
+
+const getMensagemById = id => getMensagensValidas().find(msg => msg.id === id);
+
 
 // - [GET] /mensagens - Retorna a lista de mensagens
 app.get('/mensagens', (req, res) => {
-    res.send(mensagens.filter(Boolean));
+    res.send(getMensagensValidas());
 });
 
 // - [GET] /mensagens/{iD} - Retorna UMA ÚNICA MENSAGEM pelo ID
 app.get('/mensagens/:id', (req, res) => {
-    const id = req.params.id - 1;
-    const mensagem = mensagens[id];
+    const id = +req.params.id;
+
+    const mensagem = getMensagemById(id);
+
+    if (!mensagem) {
+        res.send('Mensagem não encontrada');
+        return;
+    }
 
     res.send(mensagem);
 });
 
 // - [POST] /mensagens - Cria uma nova mensagem
 app.post('/mensagens', (req, res) => {
-    const mensagem = req.body.mensagem;
+    const mensagem = req.body;
 
+    if (mensagem || mensagem.texto) {
+        res.send('Mensagem inválida');
+
+        return;
+    }
+
+    mensagem.id = mensagens.length + 1;
     mensagens.push(mensagem);
 
-    res.send(`Mensagem criada com sucesso: '${mensagem}'`)
+    res.send(mensagem);
 });
 
 // - [PUT] /mensagens/{id} - Atualiza uma mensagem pelo ID
 app.put('/mensagens/:id', (req, res) => {
-    const id = req.params.id - 1;
+    const id = +req.params.id;
 
-    const mensagem = req.body.mensagem;
+    const mensagem = getMensagemById(id);
 
-    mensagens[id] = mensagem;
+    const novoTexto = req.body.texto;
 
-    res.send(`Mensagem atualizada com sucesso: '${mensagem}'.`)
+    if (!novoTexto) {
+        res.send('Mensagem inválida');
+
+        return;
+    }
+
+    mensagem.texto = novoTexto;
+
+    res.send(mensagem);
 });
 
 // - [DELETE] /mensagens/{id} - Remover uma mensagem pelo ID
 app.delete('/mensagens/:id', (req, res) => {
-    const id = req.params.id - 1;
+    const id = +req.params.id;
 
-    delete mensagens[id];
+    const mensagem = getMensagemById(id);
+
+    if (!mensagem) {
+        res.send('Mensagem não encontrada');
+    }
+
+    delete mensagem;
 
     res.send('Mensagem removida com sucesso.')
 });
